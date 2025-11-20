@@ -24,9 +24,6 @@ export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [stage, setStage] = useState(1);
-  const [gameOver, setGameOver] = useState(false);
-  const [victory, setVictory] = useState(false);
 
   const [player, setPlayer] = useState<Rect>({
     x: 50,
@@ -114,24 +111,8 @@ export default function Game() {
       setEnemies((es) => es.filter((e) => e.x + e.width > 0));
 
       // Stage completion
-      if (player.x + player.width >= canvasWidth - 50) {
-        if (stage < 6) {
-          setStage((s) => s + 1);
-          // Reset level
-          setPlayer({ x: 50, y: platformY - 50, width: 30, height: 50 });
-          setEnemies([
-            { x: canvasWidth - 50, y: platformY - 50, width: 30, height: 50 },
-            { x: canvasWidth - 150, y: platformY - 50, width: 30, height: 50 },
-          ]);
-        } else {
-          setVictory(true);
-        }
-      }
 
       // Game over
-      if (lives <= 0) {
-        setGameOver(true);
-      }
 
       // Draw
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -149,7 +130,7 @@ export default function Game() {
       // Score
       ctx.fillStyle = "#000";
       ctx.font = "20px Arial";
-      ctx.fillText(`Stage ${stage}  Score: ${score}  Lives: ${lives}`, 10, 30);
+      ctx.fillText(`Score: ${score}`, 10, 30);
     };
 
     const loop = () => {
@@ -159,7 +140,7 @@ export default function Game() {
     loop();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [player, enemies, score, lives, stage, gameOver, victory]);
+  }, [player, enemies, score]);
 
   // Controls
   const moveLeft = () => {
@@ -175,30 +156,7 @@ export default function Game() {
     }
   };
 
-  if (gameOver) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-4xl mb-4">Game Over</h1>
-        <Button onClick={() => { setStage(1); setLives(3); setScore(0); setGameOver(false); }}>
-          Restart
-        </Button>
-        <Share text={`I scored ${score} points in Super Mario Mini App! ${url}`} />
-      </div>
-    );
-  }
 
-  if (victory) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-4xl mb-4">Victory!</h1>
-        <p className="mb-4">Final Score: {score}</p>
-        <Button onClick={() => { setStage(1); setLives(3); setScore(0); setVictory(false); }}>
-          Play Again
-        </Button>
-        <Share text={`I scored ${score} points in Super Mario Mini App! ${url}`} />
-      </div>
-    );
-  }
 
   return (
     <div className="relative">
@@ -213,6 +171,22 @@ export default function Game() {
         <Button onClick={jump}>↑</Button>
         <Button onClick={moveRight}>→</Button>
       </div>
+      {enemies.length === 0 && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-80">
+          <Button
+            onClick={() => {
+              setEnemies([
+                { x: canvasWidth - 50, y: platformY - 50, width: 30, height: 50 },
+                { x: canvasWidth - 150, y: platformY - 50, width: 30, height: 50 },
+              ]);
+              setScore(0);
+              setPlayer({ x: 50, y: platformY - 50, width: 30, height: 50 });
+            }}
+          >
+            Continue
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
