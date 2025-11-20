@@ -46,3 +46,13 @@
 +```
 +
 +Generate an app logo and update the app metadata title and description.
+
+# 2025-11-20 16:01:55.852981
++Create a very simple platform game. The player controls Mario with three buttons at the bottom of the screen: Left, Right, and Jump.
++
++The level is a flat platform with a few small obstacles. Enemies slowly walk toward the player. Mario defeats an enemy by jumping on top of it. When an enemy is destroyed, add +1 point to the score.
+
+# 2025-11-20 16:01:55.854083
++Create a very simple platform game. The player controls Mario with three buttons at the bottom of the screen: Left, Right, and Jump.
++
++The level is a flat platform with a few small obstacles. Enemies slowly walk toward the player. Mario defeats an enemy by jumping on top of it. When an enemy is destroyed, add +1 point to the score.
