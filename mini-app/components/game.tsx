@@ -25,8 +25,6 @@ export default function Game() {
   const [fruits, setFruits] = useState<Fruit[]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<{x:number,y:number}|null>(null);
 
   // spawn fruits
   useEffect(() => {
@@ -38,7 +36,7 @@ export default function Game() {
         type: fruitImages[Math.floor(Math.random()*fruitImages.length)],
         sliced: false
       }]);
-    }, 1500);
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -83,6 +81,24 @@ export default function Game() {
 
     return () => cancelAnimationFrame(animationFrameId);
   }, [fruits]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    setFruits(f => f.map(fr => {
+      if (fr.sliced) return fr;
+      const {x, y} = fr;
+      const w = fruitSize;
+      const h = fruitSize;
+      if (clickX >= x && clickX <= x + w && clickY >= y && clickY <= y + h) {
+        setScore(s => s + 1);
+        return {...fr, sliced: true};
+      }
+      return fr;
+    }));
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setDragging(true);
@@ -133,8 +149,7 @@ export default function Game() {
         width={canvasWidth}
         height={canvasHeight}
         className="border-2 border-black bg-white"
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
+        onClick={handleClick}
       />
       <div className="absolute top-2 right-2 text-xl">Score: {score}</div>
     </div>
