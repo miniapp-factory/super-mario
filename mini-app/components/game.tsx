@@ -100,36 +100,6 @@ export default function Game() {
     }));
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setDragging(true);
-    setDragStart({x:e.nativeEvent.offsetX, y:e.nativeEvent.offsetY});
-  };
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (!dragging || !dragStart) return;
-    const dragEnd = {x:e.nativeEvent.offsetX, y:e.nativeEvent.offsetY};
-    // simple line intersection: check if line crosses fruit bounding box
-    setFruits(f => f.map(fr => {
-      if (fr.sliced) return fr;
-      const {x,y} = fr;
-      const w = fruitSize;
-      const h = fruitSize;
-      // line equation
-      const dx = dragEnd.x - dragStart.x;
-      const dy = dragEnd.y - dragStart.y;
-      const t = ((x - dragStart.x) * dx + (y - dragStart.y) * dy) / (dx*dx + dy*dy);
-      const closestX = dragStart.x + t * dx;
-      const closestY = dragStart.y + t * dy;
-      const dist = Math.hypot(closestX - x, closestY - y);
-      if (dist < w/2) {
-        sliceSound.play();
-        setScore(s => s + 1);
-        return {...fr, sliced:true};
-      }
-      return fr;
-    }));
-    setDragging(false);
-    setDragStart(null);
-  };
 
   if (gameOver) {
     return (
