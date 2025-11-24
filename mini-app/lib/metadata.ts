@@ -1,3 +1,3 @@
-export const title = "Super Mario Mini App";
-export const description = "Play a simple side‑scrolling Super Mario style game.";
+export const title = "Fruit Ninja Mini App";
+export const description = "Slice fruit in this simple Fruit Ninja style game.";
 export const url = process.env.NEXT_PUBLIC_URL;

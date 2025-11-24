@@ -6,131 +6,73 @@ import { Share } from "@/components/share";
 import { url } from "@/lib/metadata";
 
 const canvasWidth = 800;
-const canvasHeight = 400;
-const platformY = canvasHeight - 50;
-const gravity = 0.6;
-const playerSpeed = 3;
-const jumpVelocity = -12;
-const enemySpeed = 1.5;
+const canvasHeight = 600;
+const fruitImages = ["🍎","🍌","🍇","🍓"];
+const fruitSize = 50;
+const gravity = 0.5;
+const sliceSound = new Audio("/slice.mp3");
 
-interface Rect {
+interface Fruit {
   x: number;
   y: number;
-  width: number;
-  height: number;
+  vy: number;
+  type: string;
+  sliced: boolean;
 }
 
 export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fruits, setFruits] = useState<Fruit[]>([]);
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [gameOver, setGameOver] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{x:number,y:number}|null>(null);
 
-  const [player, setPlayer] = useState<Rect>({
-    x: 50,
-    y: platformY - 50,
-    width: 30,
-    height: 50,
-  });
+  // spawn fruits
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFruits(f => [...f, {
+        x: Math.random() * (canvasWidth - fruitSize),
+        y: -fruitSize,
+        vy: Math.random() * 2 + 1,
+        type: fruitImages[Math.floor(Math.random()*fruitImages.length)],
+        sliced: false
+      }]);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
-  const [enemies, setEnemies] = useState<Rect[]>([
-    { x: canvasWidth - 50, y: platformY - 50, width: 30, height: 50 },
-    { x: canvasWidth - 150, y: platformY - 50, width: 30, height: 50 },
-  ]);
-
-  const [velocityY, setVelocityY] = useState(0);
-  const [onGround, setOnGround] = useState(true);
-
-  // Game loop
+  // game loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     let animationFrameId: number;
 
     const update = () => {
-      // Apply gravity
-      if (!onGround) {
-        setVelocityY((v) => v + gravity);
-      }
+      // update fruits
+      setFruits(f => f.map(fr => ({
+        ...fr,
+        y: fr.y + fr.vy
+      })));
 
-      // Update player position
-      setPlayer((p) => ({
-        ...p,
-        y: p.y + velocityY,
-      }));
+      // remove off screen
+      setFruits(f => f.filter(fr => fr.y < canvasHeight + fruitSize));
 
-      // Ground collision
-      if (player.y + player.height >= platformY) {
-        setPlayer((p) => ({ ...p, y: platformY - p.height }));
-        setVelocityY(0);
-        setOnGround(true);
-      } else {
-        setOnGround(false);
-      }
-
-      // Update enemies
-      setEnemies((es) =>
-        es.map((e) => ({
-          ...e,
-          x: e.x - enemySpeed,
-        }))
-      );
-
-      // Collision detection
-      enemies.forEach((e, idx) => {
-        // Head hit
-        if (
-          player.y + player.height <= e.y + 5 &&
-          player.y + player.height >= e.y &&
-          player.x + player.width > e.x &&
-          player.x < e.x + e.width
-        ) {
-          // Remove enemy
-          setEnemies((es) => es.filter((_, i) => i !== idx));
-          setScore((s) => s + 1);
-        }
-        // Side hit
-        else if (
-          player.x + player.width > e.x &&
-          player.x < e.x + e.width &&
-          player.y + player.height > e.y &&
-          player.y < e.y + e.height
-        ) {
-          // Lose life
-          setLives((l) => l - 1);
-          // Reset player position
-          setPlayer({ x: 50, y: platformY - 50, width: 30, height: 50 });
-          setVelocityY(0);
-          setOnGround(true);
+      // draw
+      ctx.clearRect(0,0,canvasWidth,canvasHeight);
+      ctx.font = `${fruitSize}px serif`;
+      fruits.forEach(fr => {
+        if (!fr.sliced) {
+          ctx.fillText(fr.type, fr.x, fr.y);
         }
       });
 
-      // Remove enemies that go off screen
-      setEnemies((es) => es.filter((e) => e.x + e.width > 0));
-
-      // Stage completion
-
-      // Game over
-
-      // Draw
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      // Platform
-      ctx.fillStyle = "#654321";
-      ctx.fillRect(0, platformY, canvasWidth, 10);
-      // Player
-      ctx.fillStyle = "#ff0000";
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-      // Enemies
-      ctx.fillStyle = "#00ff00";
-      enemies.forEach((e) => {
-        ctx.fillRect(e.x, e.y, e.width, e.height);
-      });
-      // Score
-      ctx.fillStyle = "#000";
-      ctx.font = "20px Arial";
-      ctx.fillText(`Score: ${score}`, 10, 30);
+      // check game over: if any fruit reaches bottom
+      if (fruits.some(fr => fr.y > canvasHeight - 20)) {
+        setGameOver(true);
+      }
     };
 
     const loop = () => {
@@ -140,23 +82,49 @@ export default function Game() {
     loop();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [player, enemies, score]);
+  }, [fruits]);
 
-  // Controls
-  const moveLeft = () => {
-    setPlayer((p) => ({ ...p, x: Math.max(p.x - playerSpeed, 0) }));
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    setDragStart({x:e.nativeEvent.offsetX, y:e.nativeEvent.offsetY});
   };
-  const moveRight = () => {
-    setPlayer((p) => ({ ...p, x: Math.min(p.x + playerSpeed, canvasWidth - p.width) }));
-  };
-  const jump = () => {
-    if (onGround) {
-      setVelocityY(jumpVelocity);
-      setOnGround(false);
-    }
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!dragging || !dragStart) return;
+    const dragEnd = {x:e.nativeEvent.offsetX, y:e.nativeEvent.offsetY};
+    // simple line intersection: check if line crosses fruit bounding box
+    setFruits(f => f.map(fr => {
+      if (fr.sliced) return fr;
+      const {x,y} = fr;
+      const w = fruitSize;
+      const h = fruitSize;
+      // line equation
+      const dx = dragEnd.x - dragStart.x;
+      const dy = dragEnd.y - dragStart.y;
+      const t = ((x - dragStart.x) * dx + (y - dragStart.y) * dy) / (dx*dx + dy*dy);
+      const closestX = dragStart.x + t * dx;
+      const closestY = dragStart.y + t * dy;
+      const dist = Math.hypot(closestX - x, closestY - y);
+      if (dist < w/2) {
+        sliceSound.play();
+        setScore(s => s + 1);
+        return {...fr, sliced:true};
+      }
+      return fr;
+    }));
+    setDragging(false);
+    setDragStart(null);
   };
 
-
+  if (gameOver) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-4xl mb-4">Game Over</h1>
+        <p className="mb-4">Score: {score}</p>
+        <Button onClick={() => { setScore(0); setGameOver(false); setFruits([]); }}>Restart</Button>
+        <Share text={`I sliced ${score} fruits in Fruit Ninja Mini App! ${url}`} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -165,28 +133,10 @@ export default function Game() {
         width={canvasWidth}
         height={canvasHeight}
         className="border-2 border-black bg-white"
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       />
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
-        <Button onClick={moveLeft}>←</Button>
-        <Button onClick={jump}>↑</Button>
-        <Button onClick={moveRight}>→</Button>
-      </div>
-      {enemies.length === 0 && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-80">
-          <Button
-            onClick={() => {
-              setEnemies([
-                { x: canvasWidth - 50, y: platformY - 50, width: 30, height: 50 },
-                { x: canvasWidth - 150, y: platformY - 50, width: 30, height: 50 },
-              ]);
-              setScore(0);
-              setPlayer({ x: 50, y: platformY - 50, width: 30, height: 50 });
-            }}
-          >
-            Continue
-          </Button>
-        </div>
-      )}
+      <div className="absolute top-2 right-2 text-xl">Score: {score}</div>
     </div>
   );
 }
