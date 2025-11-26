@@ -34,13 +34,13 @@ export default function Game() {
       setFruits(f => [...f, {
         x: Math.random() * (canvasWidth - fruitSize),
         y: -fruitSize,
-        vy: Math.random() * 2 + 1 + Math.floor(score / 50),
+        vy: Math.random() * 2 + 1 + Math.floor(score / 30),
         type: fruitImages[Math.floor(Math.random()*fruitImages.length)],
         sliced: false
       }]);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [score]);
 
   // game loop
   useEffect(() => {
@@ -118,6 +118,7 @@ export default function Game() {
         width={canvasWidth}
         height={canvasHeight}
         className="border-2 border-black bg-white"
+        style={{ backgroundImage: 'url(/wood.png)', backgroundSize: 'cover' }}
         onClick={handleClick}
       />
       <div className="absolute top-2 right-2 text-xl">Score: {score}</div>
