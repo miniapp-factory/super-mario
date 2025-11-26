@@ -118,3 +118,9 @@
 
 # 2025-11-26 15:39:55.383380
 +fix build errors
+
+# 2025-11-26 16:02:42.669108
++First change mini app profile picture to fruit ninja. Secondly in the game after clicking on dropping fruits it should disappear and give you points. After each 50 points fruits dropping faster. Failing to click on fruit results in game over.  
+
+# 2025-11-26 16:02:42.670379
++First change mini app profile picture to fruit ninja. Secondly in the game after clicking on dropping fruits it should disappear and give you points. After each 50 points fruits dropping faster. Failing to click on fruit results in game over.  
