@@ -121,6 +121,11 @@ export default function Game() {
         style={{ backgroundImage: 'url(/wood.png)', backgroundSize: 'cover' }}
         onClick={handleClick}
       />
+      {score >= 30 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-6xl font-bold text-white drop-shadow-lg" style={{fontFamily: 'Graffiti', color: '#ff0', textShadow: '2px 2px #f00'}}>next level</span>
+        </div>
+      )}
       <div className="absolute top-2 right-2 text-xl">Score: {score}</div>
     </div>
   );
