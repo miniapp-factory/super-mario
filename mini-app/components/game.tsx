@@ -9,8 +9,6 @@ const canvasWidth = 800;
 const canvasHeight = 600;
 const fruitImages = ["🍎","🍌","🍇","🍓"];
 const fruitSize = 50;
-const gravity = 0.5;
-const sliceSound = new Audio("/slice.mp3");
 
 interface Fruit {
   x: number;
@@ -25,6 +23,10 @@ export default function Game() {
   const [fruits, setFruits] = useState<Fruit[]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const fruitsRef = useRef<Fruit[]>([]);
+  useEffect(() => {
+    fruitsRef.current = fruits;
+  }, [fruits]);
 
   // spawn fruits
   useEffect(() => {
@@ -61,14 +63,14 @@ export default function Game() {
       // draw
       ctx.clearRect(0,0,canvasWidth,canvasHeight);
       ctx.font = `${fruitSize}px serif`;
-      fruits.forEach(fr => {
+      fruitsRef.current.forEach(fr => {
         if (!fr.sliced) {
           ctx.fillText(fr.type, fr.x, fr.y);
         }
       });
 
       // check game over: if any fruit reaches bottom
-      if (fruits.some(fr => fr.y > canvasHeight - 20)) {
+      if (fruitsRef.current.some(fr => fr.y > canvasHeight - 20)) {
         setGameOver(true);
       }
     };
@@ -80,7 +82,7 @@ export default function Game() {
     loop();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [fruits]);
+  }, []);
 
   const handleClick = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
