@@ -55,10 +55,7 @@ export default function Game() {
       setFruits(f => f.map(fr => ({
         ...fr,
         y: fr.y + fr.vy
-      })));
-
-      // remove off screen or sliced
-      setFruits(f => f.filter(fr => fr.y < canvasHeight + fruitSize && !fr.sliced));
+      })).filter(fr => fr.y < canvasHeight + fruitSize && !fr.sliced));
 
       // draw
       ctx.clearRect(0,0,canvasWidth,canvasHeight);
