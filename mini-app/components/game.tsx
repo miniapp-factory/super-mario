@@ -34,7 +34,7 @@ export default function Game() {
       setFruits(f => [...f, {
         x: Math.random() * (canvasWidth - fruitSize),
         y: -fruitSize,
-        vy: Math.random() * 2 + 1,
+        vy: Math.random() * 2 + 1 + Math.floor(score / 50),
         type: fruitImages[Math.floor(Math.random()*fruitImages.length)],
         sliced: false
       }]);
@@ -57,8 +57,8 @@ export default function Game() {
         y: fr.y + fr.vy
       })));
 
-      // remove off screen
-      setFruits(f => f.filter(fr => fr.y < canvasHeight + fruitSize));
+      // remove off screen or sliced
+      setFruits(f => f.filter(fr => fr.y < canvasHeight + fruitSize && !fr.sliced));
 
       // draw
       ctx.clearRect(0,0,canvasWidth,canvasHeight);
@@ -69,8 +69,8 @@ export default function Game() {
         }
       });
 
-      // check game over: if any fruit reaches bottom
-      if (fruitsRef.current.some(fr => fr.y > canvasHeight - 20)) {
+      // check game over: if any unsliced fruit reaches bottom
+      if (fruitsRef.current.some(fr => !fr.sliced && fr.y > canvasHeight - 20)) {
         setGameOver(true);
       }
     };
